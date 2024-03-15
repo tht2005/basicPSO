@@ -105,6 +105,19 @@ def rand(l, r):
 ##########################################################
 
 
+def genTest(n):
+    f = open(inputFile, 'w')
+    f.write(str(n) + '\n')
+    for i in range(n):
+        for j in range(n):
+            if randMax(3) == 0:
+                f.write(str(rand(1, 10000)) + ' ')
+            else:
+                f.write(str(rand(1, 1000000000)) + ' ')
+        f.write('\n')
+    f.close()
+
+
 if __name__ == "__main__":
     # compile c++ files
     os.system('g++ -std=c++17 ./src/tsp_n_small.cpp -o tsp_n_small')
@@ -121,16 +134,7 @@ if __name__ == "__main__":
 
         for itest in range(ntest):
             # generate a testcase
-            f = open(inputFile, 'w')
-            f.write(str(n) + '\n')
-            for i in range(n):
-                for j in range(n):
-                    if randMax(3) == 0:
-                        f.write(str(rand(1, 10000)) + ' ')
-                    else:
-                        f.write(str(rand(1, 1000000000)) + ' ')
-                f.write('\n')
-            f.close()
+            genTest(n)
 
             print('Start running test ' + str(itest + 1) + ':')
 
