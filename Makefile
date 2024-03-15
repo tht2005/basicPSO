@@ -1,6 +1,8 @@
-CPP := ./src/main.cpp ./src/tsp_n_small.cpp ./src/tsp_pso.cpp
-HEA := ./src/tsp_n_small.h ./src/tsp_pso.h
+EXEC := main
+CPP := $(wildcard ./src/*.cpp)
+HEA := $(wildcard ./src/*.hpp)
+CXXFLAGS := -std=c++17 -Wall
 
 main: $(CPP) $(HEA)
-	g++ $(CPP) -o main -Wall
+	g++ $(CXXFLAGS) $(CPP) -o $(EXEC)
 
