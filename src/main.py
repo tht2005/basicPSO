@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 import numpy as np
 
 def run(prog, inp, out):
@@ -42,6 +43,7 @@ def prepareInput(f, inputFile):
         return [ name, n ]
 
 
+psoWeight = 0
 def checkValid(inputFile, psoOFile):
     # get input
     file = open(inputFile, "r")
@@ -77,6 +79,13 @@ def checkValid(inputFile, psoOFile):
     calc_res = 0
     for i in range(n - 1):
         calc_res += int(C[int(order[i])][int(order[i + 1])])
+    calc_res += int(C[int(order[-1])][0])
+
+    global psoWeight
+    psoWeight = res
+
+    if res != calc_res:
+        print('user output: {}, expected: {}'.format(res, calc_res))
 
     return res == calc_res
 
@@ -124,45 +133,58 @@ if __name__ == "__main__":
     os.system('g++ -std=c++17 ./src/tsp_pso.cpp -o tsp_pso')
 
     # generate random test
-    if len(sys.argv) == 1:
-        n = int(input('Input n: '))
-        ntest = int(input('Input number of tests: '))
+    n = int(input('Input n: '))
+    ntest = int(input('Input number of tests: '))
 
-        inputFile = 'a.inp'
-        psoOutputFile = 'pso.out'
-        optOutputFile = 'opt.out'
+    inputFile = 'a.inp'
+    psoOutputFile = 'pso.out'
+    optOutputFile = 'opt.out'
 
-        for itest in range(ntest):
-            # generate a testcase
-            genTest(n)
+    sumPercent = 0
+    sumTime = 0
 
-            print('Start running test ' + str(itest + 1) + ':')
+    for itest in range(ntest):
+        # generate a testcase
+        genTest(n)
 
-            print('Start pso solution...')
-            # run pso solution
-            run('tsp_pso', inputFile, psoOutputFile)
-            if checkValid(inputFile, psoOutputFile) == False:
-                print('pso prog output invalid solution!')
-                exit()
+        print('Start running test ' + str(itest + 1) + ':')
 
-            if n <= 22:
-                print('Start dp solution...')
-                # run dp solution
-                run('tsp_n_small', inputFile, optOutputFile)
-            else:
-                print('n is too large (n > 22) => not run dp solution')
+        print('Start pso solution...')
+        # run pso solution
+        begin = time.time()
+        run('tsp_pso', inputFile, psoOutputFile)
+        end = time.time()
+        
+        sumTime += end - begin
 
-            print('\n\n\n\n')
+        if checkValid(inputFile, psoOutputFile) == False:
+            print('pso prog output invalid solution!')
+            exit()
+
+        opt = -1
+
+        if n <= 22:
+            print('Start dp solution...')
+            # run dp solution
+            run('tsp_n_small', inputFile, optOutputFile)
+
+            file = open(optOutputFile, "r")
+            opt = int(file.readline().split()[0])
+            file.close()
+
+        else:
+            print('n is too large (n > 22) => not run dp solution')
+
+        if opt != -1:
+            print('Pso solution: {}'.format(psoWeight))
+            print('Dp solution: {}'.format(opt))
+            print('Percent: {}%'.format(psoWeight * 100. / opt))
+            sumPercent += psoWeight * 100. / opt
+
+        print('\n\n\n\n')
+
+    print('Average percent: {}%'.format(sumPercent / ntest))
+    print('Average Time: {}s'.format(sumTime / ntest))
 
 
-
-    # use the strong test
-    # python3 ./.../main.py (directory of tests)
-    else:
-        test_directory = sys.argv[1]
-
-        for filename in os.listdir(test_directory):
-            f = os.path.join(test_directory, filename)
-            [ name, n ] = prepareInput(f, "./a.inp")
-            print(name, n)
 
