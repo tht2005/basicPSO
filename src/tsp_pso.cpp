@@ -42,7 +42,7 @@ void cross_over(const vector<int>& p0, const vector<int>& p1, vector<int>& pc) {
 	static bool keep[NMAX];
 
 	for(int i = 0; i < (int)p0.size(); ++i) {
-		if((unsigned)rng() % 2) {
+		if((unsigned)rng() % 3) {
 			pc[i] = -1;
 			keep[p0[i]] = 0;
 		}
@@ -113,7 +113,7 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 
 	vector<vector<int>> pbest(particle);
 
-	long long next_pCost;
+	long long next_pCost, cost;
 	vector<int> tmp, tmp2, next_pbest;
 	
 	for(int t = 1; t <= CNT_ITER; ++t) {
@@ -128,11 +128,23 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 				tmp = particle[i];
 				swapRandom(tmp);
 
+				cost = f(tmp, C);
+				if(ckmin(next_pCost, cost)) {
+					next_pCost = cost;
+					next_pbest = tmp;
+				}
+
 				if(iter & 1) {
 					cross_over(tmp, pbest[i], tmp2);
 				}
 				else {
 					cross_over(pbest[i], tmp, tmp2);
+				}
+
+				cost = f(tmp2, C);
+				if(ckmin(next_pCost, cost)) {
+					next_pCost = cost;
+					next_pbest = tmp2;
 				}
 
 				if(iter >> 1 & 1) {
@@ -143,7 +155,7 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 				}
 
 				// update Cost
-				long long cost = f(tmp, C);
+				cost = f(tmp, C);
 				if(ckmin(next_pCost, cost)) {
 					next_pCost = cost;
 					next_pbest = tmp;
@@ -161,6 +173,12 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 					cross_over(pbest[i], tmp, tmp2);
 				}
 
+				cost = f(tmp2, C);
+				if(ckmin(next_pCost, cost)) {
+					next_pCost = cost;
+					next_pbest = tmp2;
+				}
+
 				if(iter >> 1 & 1) {
 					cross_over(tmp2, gbest, tmp);
 				}
@@ -169,7 +187,7 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 				}
 
 				// update Cost
-				long long cost = f(tmp, C);
+				cost = f(tmp, C);
 				if(ckmin(next_pCost, cost)) {
 					next_pCost = cost;
 					next_pbest = tmp;

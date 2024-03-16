@@ -178,8 +178,8 @@ if __name__ == "__main__":
         if opt != -1:
             print('Pso solution: {}'.format(psoWeight))
             print('Dp solution: {}'.format(opt))
-            print('Percent: {}%'.format(psoWeight * 100. / opt))
-            sumPercent += psoWeight * 100. / opt
+            print('Percent: {}%'.format(opt * 100. / psoWeight))
+            sumPercent += opt * 100. / psoWeight
 
         print('\n\n\n\n')
 
