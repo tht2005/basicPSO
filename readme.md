@@ -1,4 +1,4 @@
-# Repo chứa code của slide PSO toán rời rạc.
+# Slide + Code cơ bản về thuật toán PSO
 
 ## main.py
     Input: Số đỉnh của đồ thị và số bộ kiểm thử
