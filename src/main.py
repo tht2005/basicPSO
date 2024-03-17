@@ -175,11 +175,18 @@ if __name__ == "__main__":
         else:
             print('n is too large (n > 22) => not run dp solution')
 
-        if opt != -1:
+        print('=====================RESULT===========================')
+
+        if opt == -1:
+            print('Pso solution: {}'.format(psoWeight))
+        else:
             print('Pso solution: {}'.format(psoWeight))
             print('Dp solution: {}'.format(opt))
             print('Percent: {}%'.format(opt * 100. / psoWeight))
             sumPercent += opt * 100. / psoWeight
+
+        print('Pso Time: {}s'.format(end - begin))
+        print('######################################################')
 
         print('\n\n\n\n')
 
