@@ -4,6 +4,12 @@
     Input: Số đỉnh của đồ thị và số bộ kiểm thử
     => Tạo ra các bộ kiểm thử, và tính toán thời gian chạy và mức độ chính xác của thuật toán gần đúng.
 
+    ### Biên dịch
+    # Tại thư mục gốc của project
+    $ python3 ./src/main.py
+
+    
+
 ## tsp_pso.cpp
     Code thuật toán gần đúng giải bài toán TSP
 
