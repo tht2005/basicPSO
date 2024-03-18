@@ -32,6 +32,10 @@ const int CNT_GREEDY_CHOOSE = 2;		// number of: minimum path choose in greedy's 
 #include <chrono>
 #include <random>
 
+// https://github.com/mcximing/hungarian-algorithm-cpp
+// Implementation for minimum perfect bipartite matching
+#include "hungary/Hungarian.h"
+
 using namespace std;
 
 mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
@@ -166,16 +170,32 @@ void euler(int cur, vector<vector<int>>& adj, vector<int>& stk) {
 	stk.push_back(cur);
 }
 
-void christofide(int n, vector<int>& res, const vector<vector<int>>& mst_adj, vector<int>& odd) {
+void christofide(int n, vector<int>& res, const vector<vector<int>>& mst_adj, vector<int>& odd, const vector<vector<long long>>& C) {
 	assert((int)mst_adj.size() == n);
 	assert(((int)odd.size() & 1) == 0);
 
-	shuffle(odd.begin(), odd.end(), default_random_engine(unsigned(rng())));
+	shuffle(odd.begin(), odd.end(), rng);
 
 	vector<vector<int>> adj(mst_adj);
 	int mid = (int)odd.size() >> 1;
+
+	static vector<vector<double>> weight(mid);
+	static vector<int> trace(mid);
+	static HungarianAlgorithm hu;
+
+	assert(mid == (int)weight.size());
+
 	for(int i = 0; i < mid; ++i) {
-		add_edge(odd[i], odd[i + mid], adj);
+		weight[i].resize(mid);
+		for(int j = 0; j < mid; ++j) {
+			weight[i][j] = C[odd[i]][odd[mid + j]];
+		}
+	}
+
+	hu.Solve(weight, trace);
+	
+	for(int i = 0; i < mid; ++i) {
+		add_edge(odd[i], odd[trace[i] + mid], adj);
 	}
 
 	vector<int> path;
@@ -201,6 +221,18 @@ void christofide(int n, vector<int>& res, const vector<vector<int>>& mst_adj, ve
 	}
 }
 
+inline void update_particle(long long& cost, const vector<int>& tmp, long long& nxt_pcost, vector<int>& nxt_pbest, long long& next_pcost2, vector<int>& nxt_pbest2) {
+	if(ckmin(nxt_pcost, cost)) {
+		next_pcost2 = nxt_pcost;
+		nxt_pbest2.swap(nxt_pbest);
+
+		nxt_pbest = tmp;
+	}
+	else if(ckmin(next_pcost2, cost)) {
+		nxt_pbest2 = tmp;
+	}
+}
+
 void tsp_pso(int n, const vector<vector<long long>>& C) {
 	// init particle
 	//
@@ -218,7 +250,7 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 
 		particle[i].resize(n - 1);
 		iota(particle[i].begin(), particle[i].end(), 1);
-		shuffle(particle[i].begin(), particle[i].end(), default_random_engine(unsigned(rng())));
+		shuffle(particle[i].begin(), particle[i].end(), rng);
 
 		pCost[i] = f(particle[i], C);
 		if(ckmin(gCost, pCost[i])) {
@@ -253,7 +285,7 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 	for(int i = 2 * (CNT_PARTICLE / 3); i < CNT_PARTICLE; ++i) {
 		cerr << "\rPSO: INIT " << (i + 1);
 
-		christofide(n, particle[i], mst_adj, odd);
+		christofide(n, particle[i], mst_adj, odd, C);
 
 		pCost[i] = f(particle[i], C);
 		if(ckmin(gCost, pCost[i])) {
@@ -266,16 +298,17 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 
 	vector<vector<int>> pbest(particle);
 
-	long long next_pCost, cost;
-	vector<int> tmp, tmp2, next_pbest;
+	long long next_pCost, next_pCost2, cost;
+	vector<int> tmp, tmp2, next_pbest, next_pbest2;
 
 	
 	for(int t = 1; t <= CNT_ITER; ++t) {
 		cerr << "\rPSO: ITERATION " << t;
 
 		for(int i = 0; i < CNT_PARTICLE; ++i) {
-			next_pCost = pCost[i];
-			next_pbest = pbest[i];
+			int dungnuinaytrongnuino = (unsigned)rng() % CNT_PARTICLE;
+			next_pCost = next_pCost2 = pCost[dungnuinaytrongnuino];
+			next_pbest = next_pbest2 = particle[dungnuinaytrongnuino];
 
 			// move by swap and crossover with pbest and gbest
 			for(int iter = CNT_SWAP_CROSSOVER; iter--; ) {
@@ -283,10 +316,7 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 				swapRandom(tmp);
 
 				cost = f(tmp, C);
-				if(ckmin(next_pCost, cost)) {
-					next_pCost = cost;
-					next_pbest = tmp;
-				}
+				update_particle(cost, tmp, next_pCost, next_pbest, next_pCost2, next_pbest2);
 
 				if(iter & 1) {
 					cross_over(tmp, pbest[i], tmp2);
@@ -296,10 +326,7 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 				}
 
 				cost = f(tmp2, C);
-				if(ckmin(next_pCost, cost)) {
-					next_pCost = cost;
-					next_pbest = tmp2;
-				}
+				update_particle(cost, tmp2, next_pCost, next_pbest, next_pCost2, next_pbest2);
 
 				if(iter >> 1 & 1) {
 					cross_over(tmp2, gbest, tmp);
@@ -308,12 +335,8 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 					cross_over(gbest, tmp2, tmp);
 				}
 
-				// update Cost
 				cost = f(tmp, C);
-				if(ckmin(next_pCost, cost)) {
-					next_pCost = cost;
-					next_pbest = tmp;
-				}
+				update_particle(cost, tmp, next_pCost, next_pbest, next_pCost2, next_pbest2);
 			}
 
 			// move by crossover with pbest and gbest
@@ -328,10 +351,7 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 				}
 
 				cost = f(tmp2, C);
-				if(ckmin(next_pCost, cost)) {
-					next_pCost = cost;
-					next_pbest = tmp2;
-				}
+				update_particle(cost, tmp2, next_pCost, next_pbest, next_pCost2, next_pbest2);
 
 				if(iter >> 1 & 1) {
 					cross_over(tmp2, gbest, tmp);
@@ -342,15 +362,14 @@ void tsp_pso(int n, const vector<vector<long long>>& C) {
 
 				// update Cost
 				cost = f(tmp, C);
-				if(ckmin(next_pCost, cost)) {
-					next_pCost = cost;
-					next_pbest = tmp;
-				}
+				update_particle(cost, tmp, next_pCost, next_pbest, next_pCost2, next_pbest2);
 			}
 
 			if(ckmin(pCost[i], next_pCost)) {
-				pbest[i] = next_pbest;
+				pbest[i].swap(next_pbest);
 			}
+
+			shuffle(particle.begin(), particle.end(), rng);
 		}
 
 		// update gbest

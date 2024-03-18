@@ -130,7 +130,7 @@ def genTest(n):
 if __name__ == "__main__":
     # compile c++ files
     os.system('g++ -std=c++17 ./src/tsp_n_small.cpp -o tsp_n_small')
-    os.system('g++ -std=c++17 ./src/tsp_pso.cpp -o tsp_pso')
+    os.system('g++ -std=c++17 ./src/tsp_pso.cpp ./src/hungary/Hungarian.cpp -o tsp_pso')
 
     # generate random test
     n = int(input('Input n: '))
