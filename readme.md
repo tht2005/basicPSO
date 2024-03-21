@@ -16,7 +16,9 @@
     Biên dịch và chạy:
         # Cho input là n và ma trận n x n trong file a.inp
         # In ra độ dài đường đi và cách đi tìm được
-        $ g++ tsp_pso.cpp -o tsp_pso
+
+        # Trong thư mục ./src:
+        $ g++ tsp_pso.cpp ./hungary/Hungarian.cpp -o tsp_pso
         $ ./tsp_pso a.inp a.out
 
 ## tsp_n_small.cpp
